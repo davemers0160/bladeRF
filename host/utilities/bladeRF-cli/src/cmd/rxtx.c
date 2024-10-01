@@ -396,7 +396,7 @@ struct rxtx_data *rxtx_data_alloc(bladerf_direction dir)
 
     /* Initialize data management items */
     ret->data_mgmt.num_buffers        = 32;
-    ret->data_mgmt.samples_per_buffer = 32 * 1024;
+    ret->data_mgmt.samples_per_buffer = 12 * 2048;
     ret->data_mgmt.num_transfers      = 16;
     ret->data_mgmt.timeout_ms         = 1000;
     ret->data_mgmt.layout = rxtx_is_tx(dir) ? BLADERF_TX_X1 : BLADERF_RX_X1;

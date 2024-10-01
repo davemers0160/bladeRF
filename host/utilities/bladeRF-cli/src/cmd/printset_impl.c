@@ -1309,6 +1309,9 @@ int print_bitmode(struct cli_state *state, int argc, char **argv)
         case BLADERF_FORMAT_SC16_Q11:
             mode_str = "16 bit";
             break;
+        case BLADERF_FORMAT_SC16_Q11_PACKED:
+            mode_str = "Packed 16 bit";
+            break;
         case BLADERF_FORMAT_SC8_Q7:
             mode_str = "8 bit";
             break;
@@ -1334,7 +1337,7 @@ int set_bitmode(struct cli_state *state, int argc, char **argv)
 
     if (argc != 3) {
         if (argc == 2) {
-            printf("  Usage: %s %s <8|16>\n", argv[0], argv[1]);
+            printf("  Usage: %s %s <8|16|packed>\n", argv[0], argv[1]);
             rv = CLI_RET_OK;
             goto out;
         } else {
@@ -1343,16 +1346,18 @@ int set_bitmode(struct cli_state *state, int argc, char **argv)
         }
     }
 
-    if (!strcasecmp("16", argv[2]) || !strcasecmp("16bit", argv[2])) {
+    if (!strcasecmp("16", argv[2]) || !strcasecmp("16bit", argv[2]) || !strcasecmp("packed", argv[2])) {
         bladerf_get_feature(state->dev, &feature);
-        if(feature == BLADERF_FEATURE_OVERSAMPLE) {
-            printf("  Error: 16bit mode not permitted when\n"
-                   "         over sampling is enabled.\n");
+        if (feature == BLADERF_FEATURE_OVERSAMPLE) {
+            printf("  Error: %s mode not permitted when over sampling is enabled.\n",
+                   !strcasecmp("packed", argv[2]) ? "Packed" : "16bit");
             goto out;
         }
 
         state->bit_mode_8bit = false;
-        state->sample_format = BLADERF_FORMAT_SC16_Q11;
+        state->sample_format = !strcasecmp("packed", argv[2]) ?
+                               BLADERF_FORMAT_SC16_Q11_PACKED :
+                               BLADERF_FORMAT_SC16_Q11;
     } else if (!strcasecmp("8", argv[2]) || !strcasecmp("8bit", argv[2])) {
         if (!state->bit_mode_8bit) {
             if (strcmp(bladerf_get_board_name(state->dev), "bladerf2") != 0) {
@@ -1364,7 +1369,7 @@ int set_bitmode(struct cli_state *state, int argc, char **argv)
             state->sample_format = BLADERF_FORMAT_SC8_Q7;
         }
     } else {
-        printf("  Usage: %s %s <8|16>\n", argv[0], argv[1]);
+        printf("  Usage: %s %s <8|16|packed>\n", argv[0], argv[1]);
         rv = CLI_RET_UNSUPPORTED;
         goto out;
     }
